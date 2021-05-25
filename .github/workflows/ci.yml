@@ -65,8 +65,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs:
-      - build-publish
+    # needs:
+    #   - build-publish
     steps:
       - name: Install ArgoCD CLI
         uses: clowdhaus/argo-cd-action/@main
@@ -78,3 +78,4 @@ jobs:
           command: version
           options: --client
       - run: /opt/hostedtoolcache/argocd/2.0.0/x64/argocd version --client
+      - run: argocd version --client
