@@ -77,4 +77,4 @@ jobs:
         with:
           command: version
           options: --client
-      - run: ls -la
+      - run: /opt/hostedtoolcache/argocd/2.0.0/x64/argocd version --client
