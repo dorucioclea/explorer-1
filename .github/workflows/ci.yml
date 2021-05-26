@@ -76,7 +76,7 @@ jobs:
           repository: ${{ secrets.DEVOPS_K8S_REPO }}
 
       - name: Update Explorer versions
-        run: 'sed -i "s@image: blockstack/explorer:.*@image: blockstack/explorer:$(echo ${GITHUB_REF#refs/*/v} | tr / -)@g" sites/explorer/staging/deployment.yaml'
+        run: 'sed -i "s@image: blockstack/explorer:.*@image: blockstack/explorer:$(echo ${GITHUB_REF#refs/*/v} | tr / -)@g" sites/explorer/*/deployment.yaml'
 
       - name: Commit version update
         uses: stefanzweifel/git-auto-commit-action@v4
@@ -91,8 +91,6 @@ jobs:
       - name: ArgoCD - Install CLI
         uses: clowdhaus/argo-cd-action/@main
         env:
-          # Only required for first step in job where API is called
-          # All subsequent setps in a job will not re-download the CLI
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           command: version
@@ -102,4 +100,4 @@ jobs:
         run: argocd --insecure login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }}
 
       - name: Argocd - Sync Explorer
-        run: argocd app sync staging.explorer | grep -v "http"
+        run: argocd app sync staging.explorer prod.explorer | grep -v "http"
