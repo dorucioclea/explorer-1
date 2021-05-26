@@ -22,8 +22,10 @@ runs:
       with:
         token: ${{ secrets.GH_TOKEN }}
         repository: ${{ secrets.DEVOPS_K8S_REPO }}
+        path: ${{ secrets.DEVOPS_K8S_REPO }}
 
     - name: Update ${{ github.event.repository.name }} versions
+      working-directory: ${{ secrets.DEVOPS_K8S_REPO }}
       run: |
         if [[ -z "${{ inputs.docker_tag }}" ]]; then
           if [[ "${GITHUB_REF}" =~ 'refs/tags/v.*' ]]; then
@@ -39,6 +41,7 @@ runs:
     - name: Commit version update
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
+        repository: ${{ secrets.DEVOPS_K8S_REPO }}
         commit_message: 'auto: update ${{ github.event.repository.name }} version'
         branch: auto/explorer-update
         file_pattern: ${{ inputs.file_pattern }}
