@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 on:
   push:
     branches:
@@ -69,35 +69,8 @@ jobs:
     # needs:
     #   - build-publish
     steps:
-      - name: Checkout k8s repo
-        uses: actions/checkout@v2
+      - name: Deploy Explorer
+        uses: ./.github/actions/deploy
         with:
-          token: ${{ secrets.GH_TOKEN }}
-          repository: ${{ secrets.DEVOPS_K8S_REPO }}
-
-      - name: Update Explorer versions
-        run: 'sed -i "s@image: blockstack/explorer:.*@image: blockstack/explorer:$(echo ${GITHUB_REF#refs/*/v} | tr / -)@g" sites/explorer/*/deployment.yaml'
-
-      - name: Commit version update
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: 'auto: update explorer version'
-          branch: auto/explorer-update
           file_pattern: sites/explorer/*/deployment.yaml
-          commit_user_name: ${{ secrets.DEVOPS_COMMIT_USER }}
-          commit_user_email: ${{ secrets.DEVOPS_COMMIT_EMAIL }}
-          commit_author: ${{ secrets.DEVOPS_COMMIT_USER }} <${{ secrets.DEVOPS_COMMIT_EMAIL }}>
-
-      - name: ArgoCD - Install CLI
-        uses: clowdhaus/argo-cd-action/@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          command: version
-          options: --client
-
-      - name: Argocd - Login
-        run: argocd --insecure login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }}
-
-      - name: Argocd - Sync Explorer
-        run: argocd app sync staging.explorer prod.explorer | grep -v "http"
+          argocd_apps: -l name=${{ github.event.repository.name }}

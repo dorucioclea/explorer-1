@@ -1,0 +1,58 @@
+name: Deploy
+description: Deploys a new service version
+inputs:
+  file_pattern:
+    description: Glob pattern of k8s files to be updated
+    required: true
+  docker_image:
+    description: The docker image to deploy. Defaults to the name of the repository
+    required: true
+    default: ${{ github.repository }}
+  docker_tag:
+    description: The docker tag to deploy. Defaults to the tag or branch which triggered this workflow
+    required: false
+  argocd_apps:
+    description: The ArgoCD apps or matching label selectors to sync
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout k8s repo
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GH_TOKEN }}
+        repository: ${{ secrets.DEVOPS_K8S_REPO }}
+
+    - name: Update ${{ github.event.repository.name }} versions
+      run: |
+        if [[ -z "${{ inputs.docker_tag }}" ]]; then
+          if [[ "${GITHUB_REF}" =~ 'refs/tags/v.*' ]]; then
+            DOCKER_TAG=$(echo ${GITHUB_REF#refs/*/v} | tr / -)
+          else
+            DOCKER_TAG=$(echo ${GITHUB_REF#refs/*/} | tr / -)
+          fi
+        else
+          DOCKER_TAG="${{ inputs.docker_tag }}"
+        fi
+        sed -i "s@image: ${{ inputs.docker_image }}:.*@image: ${{ inputs.docker_image }}:${DOCKER_TAG}@g" ${{ inputs.file_pattern }}
+
+    - name: Commit version update
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: 'auto: update ${{ github.event.repository.name }} version'
+        branch: auto/explorer-update
+        file_pattern: ${{ inputs.file_pattern }}
+        commit_user_name: ${{ secrets.DEVOPS_COMMIT_USER }}
+        commit_user_email: ${{ secrets.DEVOPS_COMMIT_EMAIL }}
+        commit_author: ${{ secrets.DEVOPS_COMMIT_USER }} <${{ secrets.DEVOPS_COMMIT_EMAIL }}>
+
+    - name: ArgoCD - Install CLI
+      uses: clowdhaus/argo-cd-action/@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Argocd - Login
+      run: argocd login ${{ secrets.ARGOCD_SERVER }} --username ${{ secrets.ARGOCD_USERNAME }} --password ${{ secrets.ARGOCD_PASSWORD }}
+
+    - name: Argocd - Sync ${{ github.event.repository.name }}
+      run: argocd app sync ${{ inputs.argocd_apps }} | grep -v "http"
