@@ -1,6 +1,12 @@
 # Stacks 2.0 Explorer
 
 ![An image of the Stacks Explorer](/explorer-image.png 'Stacks Explorer')
+![CI/CD](https://github.com/blockstack/explorer/actions/workflows/ci.yml/badge.svg)
+
+| Environment | Status                                                                                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prod        | [![Prod App Status](https://argocd.blockstack.xyz/api/badge?name=prod.explorer&revision=true)](https://argocd.blockstack.xyz/applications/prod.explorer)          |
+| Staging     | [![Staging App Status](https://argocd.blockstack.xyz/api/badge?name=staging.explorer&revision=true)](https://argocd.blockstack.xyz/applications/staging.explorer) |
 
 ### Getting started
 
@@ -15,8 +21,9 @@ yarn
 The application needs a couple of env variables to work properly:
 
 ```
-NEXT_PUBLIC_MAINNET_API_SERVE=https://stacks-node-api.stacks.co
+NEXT_PUBLIC_MAINNET_API_SERVER=https://stacks-node-api.stacks.co
 NEXT_PUBLIC_TESTNET_API_SERVER=https://stacks-node-api.testnet.stacks.co
+NEXT_PUBLIC_REGTEST_API_SERVER=https://stacks-node-api.regtest.stacks.co
 NEXT_PUBLIC_LEGACY_EXPLORER_API_SERVER=https://explorer-api.legacy.blockstack.org
 NEXT_PUBLIC_DEPLOYMENT_URL=https://explorer.stacks.co
 NEXT_PUBLIC_MAINNET_ENABLED="true"
